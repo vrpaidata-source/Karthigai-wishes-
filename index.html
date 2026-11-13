@@ -1,0 +1,200 @@
+
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>மீனாட்சி அம்மன் வாழ்த்து</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;
+ text-align:center;
+ font-family:Arial,sans-serif;
+ background:linear-gradient(#fff0c9,#f7c56c);
+ color:#713500;
+}
+h2{padding:18px}
+.scene{margin:25px auto}
+.items{
+ display:flex;
+ justify-content:space-around;
+ align-items:center;
+ font-size:45px;
+}
+.lamp{font-size:100px}
+.door{
+ width:260px;
+ height:250px;
+ margin:25px auto;
+ perspective:800px;
+ background:#572b0a;
+ position:relative;
+ overflow:hidden;
+ border:6px solid #9b5a13;
+}
+.inside{
+ position:absolute;
+ inset:0;
+ display:flex;
+ flex-direction:column;
+ justify-content:center;
+ align-items:center;
+ background:#ffe4a0;
+ font-size:27px;
+ font-weight:bold;
+}
+.door::after{
+ content:"🚪";
+ position:absolute;
+ inset:0;
+ background:#8c4213;
+ display:flex;
+ justify-content:center;
+ align-items:center;
+ font-size:130px;
+ transform-origin:left;
+ transition:transform 2s;
+}
+.door.open::after{
+ transform:rotateY(-110deg);
+}
+#shareArea{
+ display:none;
+ margin:25px auto;
+ padding:15px;
+}
+input,textarea{
+ width:90%;
+ max-width:350px;
+ padding:12px;
+ margin:8px;
+ border-radius:8px;
+ border:1px solid #b77b2c;
+ font-size:16px;
+}
+button{
+ padding:13px 25px;
+ margin:12px;
+ border:0;
+ border-radius:25px;
+ background:#a34a08;
+ color:white;
+ font-size:17px;
+ font-weight:bold;
+ cursor:pointer;
+}
+#wishDisplay{
+ font-size:24px;
+ font-weight:bold;
+ margin:20px;
+}
+</style>
+</head>
+
+<body>
+
+<h2>🌺 நிபந்தனை 🌺</h2>
+
+<div class="scene">
+ <div class="items">
+  <div>🔥</div>
+  <div class="lamp">🪔</div>
+  <div>🪵</div>
+ </div>
+</div>
+
+<div class="door" id="door">
+ <div class="inside">
+  <div style="font-size:65px">🙏</div>
+  <div>மீனாட்சி அம்மன்</div>
+  <div>🌺 வாழ்த்துக்கள் 🌺</div>
+ </div>
+</div>
+
+<div id="shareArea">
+ <h3>🌸 நண்பர்களுக்கு பகிருங்கள் 🌸</h3>
+
+ <input id="sender" placeholder="அனுப்புநர் பெயர்">
+
+ <textarea id="wish" placeholder="உங்கள் வாழ்த்து செய்தி"></textarea>
+
+ <br>
+ <button onclick="shareWish()">Sent ❤️</button>
+</div>
+
+<div id="wishDisplay"></div>
+
+<div id="createArea" style="display:none">
+ <button onclick="restart()">நீங்களும் உருவாக்க 🌺</button>
+</div>
+
+<script>
+const params=new URLSearchParams(location.search);
+const sender=params.get("sender");
+const wish=params.get("wish");
+
+if(sender){
+ document.getElementById("shareArea").style.display="none";
+ document.getElementById("door").classList.add("open");
+ document.getElementById("wishDisplay").innerHTML=
+ "🌺 அன்புடன் "+escapeHTML(sender)+" 🌺<br><br>"+
+ escapeHTML(wish || "வாழ்த்துக்கள்");
+ document.getElementById("createArea").style.display="block";
+}else{
+ setTimeout(()=>{
+  document.getElementById("door").classList.add("open");
+ },500);
+
+ setTimeout(()=>{
+  document.getElementById("shareArea").style.display="block";
+ },2500);
+}
+
+function escapeHTML(str){
+ return String(str).replace(/[&<>"']/g,c=>({
+ "&":"&amp;","<":"&lt;",">":"&gt;",
+ '"':"&quot;","'":"&#39;"
+ }[c]));
+}
+
+async function shareWish(){
+ const name=document.getElementById("sender").value.trim();
+ const message=document.getElementById("wish").value.trim();
+
+ if(!name || !message){
+  alert("பெயர் மற்றும் வாழ்த்து நிரப்பவும்!");
+  return;
+ }
+
+ const link=new URL(location.href);
+ link.search="";
+ link.searchParams.set("sender",name);
+ link.searchParams.set("wish",message);
+
+ try{
+  if(navigator.share){
+   await navigator.share({
+    title:"மீனாட்சி அம்மன் வாழ்த்து",
+    text:name+" அவர்களின் வாழ்த்து",
+    url:link.href
+   });
+  }else{
+   await navigator.clipboard.writeText(link.href);
+   alert("வாழ்த்து Link Copy செய்யப்பட்டது!");
+  }
+ }catch(e){
+  if(e.name!=="AbortError"){
+   alert("பகிர முடியவில்லை. மீண்டும் முயற்சிக்கவும்.");
+  }
+ }
+}
+
+function restart(){
+ location.href=location.pathname;
+}
+</script>
+
+</body>
+</html>
