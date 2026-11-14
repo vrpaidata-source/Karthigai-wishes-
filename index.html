@@ -207,7 +207,18 @@ function buildShareText(){
  shareUrl.searchParams.set('sender',name);
  shareUrl.searchParams.set('wish',wish);
  const url=shareUrl.toString();
- return {name,wish,url,text:'அனுப்புநர்: '+name+'\\'+wish+'\\\\வாழ்த்துக் கடிதத்தை இந்த இணைப்பில் திறக்கவும்: '+url};
+ return {
+ name,
+ wish,
+ url,
+ text:
+ '🪔 கார்த்திகை திருநாள் நல்வாழ்த்துக்கள்! ✨\n\n'+
+ '💌 '+name+' அவர்கள் அன்புடன் அனுப்பிய வாழ்த்து:\n\n'+
+ wish+'\n\n'+
+ '🌟 நீங்களும் உங்கள் அன்பானவர்களுக்கு வாழ்த்து அனுப்புங்கள்!\n\n'+
+ '🔗 உங்கள் வாழ்த்தை இங்கே திறக்கவும்:\n'+url+'\n\n'+
+ '❤️ ஒளி பெருகட்டும்! மகிழ்ச்சி நிறையட்டும்!'
+}
 }
 document.getElementById('sendWish').onclick=()=>{
  const screen=document.getElementById('envelopeScreen');
