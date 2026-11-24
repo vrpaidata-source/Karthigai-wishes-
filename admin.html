@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="ta">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#091321">
+<title>Karthigai Wishes - Admin</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#091321;color:#fff;font-family:system-ui,"Noto Sans Tamil",sans-serif;padding:20px 12px}
+main{max-width:620px;margin:24px auto;background:#14283a;border:1px solid #80683c;border-radius:16px;padding:20px;box-shadow:0 10px 35px #0008}
+h1{color:#ffe4a0;text-align:center;font-size:23px}p{line-height:1.6}input,button{width:100%;padding:12px;margin:7px 0;border-radius:9px;font:inherit}
+input{background:#fff;color:#222;border:1px solid #b7a47c}button{border:0;background:#d49b35;color:#201300;font-weight:800}
+button:disabled{opacity:.6}#status{color:#ffe4a0;overflow-wrap:anywhere}.wish{border:1px solid #80683c;border-radius:10px;padding:12px;margin:12px 0;overflow-wrap:anywhere}.wish small{color:#d6c49c}.wish p{white-space:pre-wrap}.delete{background:#8b2929;color:white}.actions{display:flex;gap:8px}.actions button{flex:1}a{color:#ffe4a0}
+</style>
+</head>
+<body>
+<main>
+<h1>🪔 Karthigai Wishes Admin</h1>
+<section id="loginBox">
+<p>Admin Email மற்றும் Password மூலம் உள்நுழையுங்கள்.</p>
+<input id="email" type="email" placeholder="Admin Email" autocomplete="username">
+<input id="password" type="password" placeholder="Password" autocomplete="current-password">
+<button id="login">Login</button>
+</section>
+<div class="actions">
+<button id="refresh" hidden>Refresh</button>
+<button id="logout" hidden>Logout</button>
+</div>
+<p id="status" role="status" aria-live="polite">Admin Login செய்யவும்.</p>
+<section id="records"></section>
+<p><a href="./">← வாழ்த்து பக்கத்திற்குத் திரும்பு</a></p>
+</main>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig={
+ apiKey:"AIzaSyCH-XXs64rZad9z4dKkrZa_h-tZ_FhdMIQ",
+ authDomain:"vrpaidata-karthigai-wishes.firebaseapp.com",
+ projectId:"vrpaidata-karthigai-wishes",
+ storageBucket:"vrpaidata-karthigai-wishes.firebasestorage.app",
+ messagingSenderId:"360935777016",
+ appId:"1:360935777016:web:2813b1d3d6a78c91f1110d"
+};
+firebase.initializeApp(firebaseConfig);
+const auth=firebase.auth(), db=firebase.firestore();
+const $=id=>document.getElementById(id);
+let adminUid=null;
+async function loadWishes(){
+ if(!adminUid)return;
+ $("status").textContent="வாழ்த்துகள் ஏற்றப்படுகின்றன...";
+ $("records").replaceChildren();
+ try{
+  const snap=await db.collection("wishes").orderBy("createdAt","desc").limit(200).get();
+  if(snap.empty){$("status").textContent="0 பதிவுகள் — இன்னும் வாழ்த்துகள் இல்லை.";return;}
+  $("status").textContent=snap.size+" பதிவுகள்";
+  snap.forEach(doc=>{
+   const d=doc.data(), card=document.createElement("article");card.className="wish";
+   const name=document.createElement("strong");name.textContent=d.name||"பெயர் இல்லை";
+   const date=document.createElement("small");
+   date.textContent=d.createdAt&&d.createdAt.toDate?d.createdAt.toDate().toLocaleString("ta-IN"):"";
+   const wish=document.createElement("p");wish.textContent=d.wish||"";
+   const del=document.createElement("button");del.className="delete";del.textContent="இந்த பதிவை நீக்கு";
+   del.onclick=async()=>{if(!confirm("இந்த வாழ்த்தை நீக்கவா?"))return;del.disabled=true;try{await db.collection("wishes").doc(doc.id).delete();await loadWishes();}catch(e){$("status").textContent="நீக்க முடியவில்லை: "+e.message;del.disabled=false;}};
+   card.append(name,document.createElement("br"),date,wish,del);$("records").append(card);
+  });
+ }catch(e){$("status").textContent="பதிவுகளைப் பெற முடியவில்லை: "+e.message;}
+}
+$("login").onclick=async()=>{
+ $("login").disabled=true;$("status").textContent="சரிபார்க்கப்படுகிறது...";
+ try{
+  const email=$("email").value.trim(),password=$("password").value;
+  if(!email||!password)throw new Error("Email மற்றும் Password உள்ளிடுங்கள்.");
+  const cred=await auth.signInWithEmailAndPassword(email,password);
+  const adminDoc=await db.collection("admins").doc(cred.user.uid).get();
+  if(!adminDoc.exists){await auth.signOut();throw new Error("இந்த கணக்கிற்கு Admin அனுமதி இல்லை.");}
+  adminUid=cred.user.uid;$("loginBox").hidden=true;$("refresh").hidden=false;$("logout").hidden=false;
+  $("status").textContent="Admin Login வெற்றி";await loadWishes();
+ }catch(e){$("status").textContent="Login தோல்வி: "+e.message;}
+ finally{$("login").disabled=false;}
+};
+$("refresh").onclick=loadWishes;
+$("logout").onclick=async()=>{await auth.signOut();adminUid=null;$("records").replaceChildren();$("loginBox").hidden=false;$("refresh").hidden=true;$("logout").hidden=true;$("password").value="";$("status").textContent="Logout செய்துவிட்டீர்கள்.";};
+</script>
+</body>
+</html>
